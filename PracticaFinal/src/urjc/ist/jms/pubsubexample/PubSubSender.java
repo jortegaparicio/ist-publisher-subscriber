@@ -1,48 +1,74 @@
 package urjc.ist.jms.pubsubexample;
 
 import javax.jms.*;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
-public class PubSubSender {
+/**
+ * <h1>PubSubSender class</h1>
+ * 
+ * <p> The PubSubSender implements Runnable overriding run() method.
+ * This class publish each publisher message in the Topic of the Payara server 
+ * for the publisher/subscriber pattern.
+ * <p>
+ * @authors César Borao Moratinos & Juan Antonio Ortega Aparicio
+ * @version 1.0, 11/05/2021
+ */
+public class PubSubSender implements Runnable{
 
-	private static final String factoryName = "Factoria2";
-	private static final String topicName = "Topic1";
+	private static final String topicName   = "Topic1"; // Name of the topic
+	private static final int    NMESSAGE    = 3;        // Number of messages 
+	private static final int    MILISLEEP   = 1000;     // ms sleeping time
+	
+	private TopicConnection connection; // Attribute that establish a connection with Payara Server
+	private Topic topic;                // Attribute where we post messages
+	
+	/**
+	 * Constructor with arguments. It requires the connection with the Payara Server and 
+	 * the Topic where we share our messages.
+	 * 
+	 * @param connection Connection with Payara Server
+	 * @param topic Topic where we share messages
+	 */
+	public PubSubSender(TopicConnection connection, Topic topic) {
+		super();
+		this.connection = connection;
+		this.topic = topic;
+	}
 
-	public static void main(String[] args) {
+	/**
+	 * Method override run() method from Runnable 
+	 */
+	@Override
+	public void run(){
 		try {
 
-			InitialContext jndi = new InitialContext();
-			TopicConnectionFactory factory = 
-					(TopicConnectionFactory)jndi.lookup(factoryName);
-			Topic topic = (Topic)jndi.lookup(topicName);
-
-			TopicConnection connection = factory.createTopicConnection();
+			// Create session and activate auto-commit
 			TopicSession session = 
 					connection.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
+			
+			// Creating publisher and creating the message 
 			TopicPublisher publisher = session.createPublisher(topic);
-
 			TextMessage msg = session.createTextMessage();
-			for(int i = 0; i < 10; i++){
+			
+			// Send NMESSAGE to the subscribers
+			for(int i = 0; i < NMESSAGE; i++){
+				
+				// Create the message
 				msg.setText("Message " + i + " to " + topicName);
+				
+				// Publish the message
 				publisher.publish(msg);
-				System.err.println("Enviado mensaje " + i + " a " + topicName);
-				Thread.sleep(1000);
+				
+				// Print the message associated to this Thread
+				System.err.println("Thread " + Thread.currentThread().getId() + 
+						". Enviado mensaje " + i + " a " + topicName);
+				Thread.sleep(MILISLEEP);
 			}
-			System.err.println("\nSending message to close connection...");
-			// Enviar mensaje de cierre al receptor
-			msg.setText("CLOSE");
-			publisher.publish(msg);
-			connection.close();
-			System.err.println("\nClosing publisher...");
 
-		} catch (NamingException ex) {
-			ex.printStackTrace();
 		} catch (JMSException ex) {
 			ex.printStackTrace();
 		} catch (InterruptedException ex) {
 			ex.printStackTrace();
 		} 
 	}
-
+		
 }
