@@ -35,7 +35,7 @@ public class PubSubSender implements Runnable{
 	}
 
 	/**
-	 * Method override run() method from Runnable 
+	 * Method override run() method from Runnable that sends NMESSAGES to the subscribers
 	 */
 	@Override
 	public void run(){
