@@ -125,5 +125,4 @@ public class PubSubAsyncReceiver implements Runnable, MessageListener{
 			ex.printStackTrace();
 		}
 	}
-	
 }
